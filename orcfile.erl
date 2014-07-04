@@ -98,19 +98,31 @@ generate() ->
     I = random:uniform(1),
     J = random:uniform(1),
     %%S = [ $0 + random:uniform(78) || _ <- lists:seq(1, 2) ],
-    S = [ $0 || _ <- lists:seq(1, 2) ],
-    {[{<<"i">>, I}, {<<"j">>, J}, {<<"s">>, list_to_binary(S)}]}.
+    S = [ $0 || _ <- lists:seq(1, 4) ],
+    K = case random:uniform(10) of
+            1 -> [{<<"k">>, random:uniform(100)}];
+            _ -> []
+        end,
+    L = case random:uniform(100) of
+            1 -> [{<<"l">>, list_to_binary([ $0 + random:uniform(78) || _ <- lists:seq(1, 255) ])}];
+            _ -> []
+        end,
+    {L ++ K ++ [{<<"i">>, I}, {<<"j">>, J}, {<<"s">>, list_to_binary(S)}]}.
 
 schema() ->
-    [{<<"i">>, integer}, {<<"j">>, integer}, {<<"s">>, string}].
+    [{<<"i">>, integer}, {<<"j">>, integer}, {<<"s">>, string},
+     {<<"k">>, integer}, {<<"l">>, string}].
 
 orcfile_test() ->
     random:seed(erlang:now()),
     ?debugVal(generate()),
     _ = file:delete("Testfile"),
     {ok, ORCFile0} = orcfile:create("Testfile", schema(), []),
-    Data = [ generate() || _ <- lists:seq(0, 255) ],
+    Data = [ generate() || _ <- lists:seq(0, 1024) ],
     {ok, ORCFile} = orcfile:push(ORCFile0, Data),
-    ok = orcfile:close(ORCFile).
+    ok = orcfile:close(ORCFile),
+    BERTSize = byte_size(term_to_binary(Data)),
+    ?debugVal({bertsize, BERTSize}).
+
 
 -endif.
