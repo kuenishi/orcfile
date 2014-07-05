@@ -38,6 +38,7 @@
 -record(orcfile, {
           file :: filename:filename(),
           fd :: file:io_device(),
+          mode = read :: read|write,
           schema = [] :: proplists:proplist(),
           tblproperties :: #params{},
           stripes = [] :: list(), %% Stripes to be written down; just as a buffer
@@ -45,14 +46,16 @@
          }).
 
 open(Filename) ->
+    {ok, Fd} = file:open(Filename, [read,binary]),
     New = #orcfile{},
-    New#orcfile{file=Filename}.
+    {ok, New#orcfile{file=Filename, fd=Fd}}.
 
 create(Filename, Schema, _Options) ->
     %% exclusive open required
     File0 = #orcfile{},
     {ok, Fd} = file:open(Filename, [write, exclusive, binary]),
     File = File0#orcfile{file=Filename, fd=Fd, schema=Schema,
+                         mode=write,
                          stripe=orcfile_stripe:new(Schema)},
     {ok, File}.
 
@@ -74,15 +77,15 @@ push(#orcfile{stripe=Stripe0} = ORCFile,
     end.
 
 %% does nothing
-write(ORCFile, P) ->
-    ?debugVal(P),
+write(ORCFile, _P) ->
+    %% ?debugVal(P),
     io:format("foobar, ~p", [ORCFile]),
     ok.
 
 flush(#orcfile{fd=Fd, stripe=Stripe} = _ORCFile) ->
     %% Stripes:
     Binary = orcfile_stripe:to_iolist(Stripe),
-    ?debugVal(Binary),
+    %% ?debugVal(Binary),
     ok = file:write(Fd, Binary),
     %% File footer:
     Footer = orcfile_footer:to_iolist(tmp),
@@ -95,11 +98,16 @@ flush(#orcfile{fd=Fd, stripe=Stripe} = _ORCFile) ->
     {ok, byte_size(iolist_to_binary(Binary))}.
 
 %% actually writes and flushes to the file
-close(#orcfile{fd=Fd} = ORCFile) ->
+close(#orcfile{mode=Mode, fd=Fd} = ORCFile) ->
     %% TODO: Flush all data, or else
-    {ok, Size} = flush(ORCFile),
-    ?debugVal(ORCFile),
-    ?debugVal({size, Size}),
+    case Mode of
+        write ->
+            {ok, Size} = flush(ORCFile),
+            ?debugVal(ORCFile),
+            ?debugVal({size, Size});
+        read ->
+            ok
+    end,
     ok = file:close(Fd).
 
 -ifdef(TEST).
@@ -123,9 +131,9 @@ schema() ->
     [{<<"i">>, integer}, {<<"j">>, integer}, {<<"s">>, string},
      {<<"k">>, integer}, {<<"l">>, string}].
 
-orcfile_test() ->
+orcfile_write_test() ->
     random:seed(erlang:now()),
-    ?debugVal(generate()),
+    %% ?debugVal(generate()),
     _ = file:delete("Testfile"),
     {ok, ORCFile0} = orcfile:create("Testfile", schema(), []),
     Data = [ generate() || _ <- lists:seq(0, 1024) ],
@@ -136,5 +144,10 @@ orcfile_test() ->
 
 %% TODO: read from "Testfile" and compare the query result, queries against Data itself
 
+
+orcfile_read_test() ->
+    {ok, ORCFile} = orcfile:open("../test/000000_0"),
+    ?debugVal(ORCFile),
+    ok = orcfile:close(ORCFile).
 
 -endif.

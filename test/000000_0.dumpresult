@@ -1,0 +1,22 @@
+Structure for ../hive/warehouse/testtable/000000_0
+Rows: 2
+Compression: ZLIB
+Compression size: 262144
+Type: struct<_col0:string,_col1:int>
+
+Statistics:
+  Column 0: count: 2
+  Column 1: count: 2 min: "aasdf" max: "foobar"
+  Column 2: count: 2 min: 12 max: 235 sum: 247
+
+Stripes:
+  Stripe: offset: 3 data: 33 rows: 2 tail: 46 index: 69
+    Stream: column 0 section ROW_INDEX start: 3 length 9
+    Stream: column 1 section ROW_INDEX start: 12 length 36
+    Stream: column 2 section ROW_INDEX start: 48 length 24
+    Stream: column 1 section DATA start: 72 length 18
+    Stream: column 1 section LENGTH start: 90 length 7
+    Stream: column 2 section DATA start: 97 length 8
+    Encoding column 0: DIRECT
+    Encoding column 1: DIRECT_V2
+    Encoding column 2: DIRECT_V2
