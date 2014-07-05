@@ -6,6 +6,7 @@
 %%%  This is still Proof of Concept, and never tested connectivity
 %%%  with real ORCFile - due to the network connectivity.
 %%%
+%%%  https://cwiki.apache.org/confluence/display/Hive/LanguageManual+ORC
 %%%  http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.0.0.2/ds_Hive/orcfile.html
 %%%  open, scan, query, min/max/count, close
 %%%  create, write, close
@@ -79,9 +80,18 @@ write(ORCFile, P) ->
     ok.
 
 flush(#orcfile{fd=Fd, stripe=Stripe} = _ORCFile) ->
+    %% Stripes:
     Binary = orcfile_stripe:to_iolist(Stripe),
     ?debugVal(Binary),
     ok = file:write(Fd, Binary),
+    %% File footer:
+    Footer = orcfile_footer:to_iolist(tmp),
+    %% ?debugVal(Footer),
+    ok = file:write(Fd, Footer),
+    %% postscript:
+    Postscript = orcfile_footer:postscript(tmp),
+    %% ?debugVal(Postscript),
+    ok = file:write(Fd, Postscript),
     {ok, byte_size(iolist_to_binary(Binary))}.
 
 %% actually writes and flushes to the file
@@ -123,6 +133,8 @@ orcfile_test() ->
     ok = orcfile:close(ORCFile),
     BERTSize = byte_size(term_to_binary(Data)),
     ?debugVal({bertsize, BERTSize}).
+
+%% TODO: read from "Testfile" and compare the query result, queries against Data itself
 
 
 -endif.

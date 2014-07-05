@@ -27,7 +27,10 @@ optimized file formats of Hive.
 
 It has 250MB slot and consists of header/column index, and footer.
 
-It uses protobuf.
+[It uses protobuf](https://github.com/apache/hive/blob/release-0.13.1/ql/src/protobuf/org/apache/hadoop/hive/ql/io/orc/orc_proto.proto)
+but seems not sound, as it has some cap between the image in
+[the high level discription page](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+ORC)
+.
 
 # Parquet
 
