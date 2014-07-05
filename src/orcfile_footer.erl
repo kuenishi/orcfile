@@ -31,5 +31,5 @@ postscript(_) ->
                      compressionblocksize = 0,
                      version = [1],
                      metadatalength = 1,
-                     magic = "magic"},
+                     magic = "ORC"},
     orc_proto_pb:encode(PS).

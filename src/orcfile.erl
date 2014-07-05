@@ -54,6 +54,7 @@ create(Filename, Schema, _Options) ->
     %% exclusive open required
     File0 = #orcfile{},
     {ok, Fd} = file:open(Filename, [write, exclusive, binary]),
+    ok = file:write(Fd, <<"ORC">>),
     File = File0#orcfile{file=Filename, fd=Fd, schema=Schema,
                          mode=write,
                          stripe=orcfile_stripe:new(Schema)},
@@ -144,6 +145,17 @@ orcfile_write_test() ->
 
 %% TODO: read from "Testfile" and compare the query result, queries against Data itself
 
+
+orcfile_write2_test() ->
+    file:delete("111111"),
+    {ok, ORCFile0} = orcfile:create("111111", [{<<"testname">>,string}, {<<"testnumber">>, integer}], []),
+    Data = [ {[{<<"testname">>, <<"foobar">>}, {<<"testnumber">>, 12}]},
+             {[{<<"testname">>, <<"aasdf">>}, {<<"testnumber">>, 235}]}],
+    {ok, ORCFile} = orcfile:push(ORCFile0, Data),
+    ok = orcfile:close(ORCFile),
+    BERTSize = byte_size(term_to_binary(Data)),
+    ?debugVal({bertsize, BERTSize}).
+    
 
 orcfile_read_test() ->
     {ok, ORCFile} = orcfile:open("../test/000000_0"),
