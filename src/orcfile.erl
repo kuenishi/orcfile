@@ -93,7 +93,9 @@ flush(#orcfile{fd=Fd, stripe=Stripe} = _ORCFile) ->
     %% ?debugVal(Footer),
     ok = file:write(Fd, Footer),
     %% postscript:
-    Postscript = orcfile_footer:postscript(tmp),
+    FooterLen = byte_size(iolist_to_binary(Footer)),
+    Postscript = orcfile_footer:postscript(tmp,FooterLen),
+                                           
     %% ?debugVal(Postscript),
     ok = file:write(Fd, Postscript),
     {ok, byte_size(iolist_to_binary(Binary))}.

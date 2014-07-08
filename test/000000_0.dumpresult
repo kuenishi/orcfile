@@ -1,7 +1,6 @@
-Structure for ../hive/warehouse/testtable/000000_0
+Structure for /home/kuenishi/hadoop/hive/warehouse/testtable2/000000_0
 Rows: 2
-Compression: ZLIB
-Compression size: 262144
+Compression: NONE
 Type: struct<_col0:string,_col1:int>
 
 Statistics:
@@ -10,13 +9,13 @@ Statistics:
   Column 2: count: 2 min: 12 max: 235 sum: 247
 
 Stripes:
-  Stripe: offset: 3 data: 33 rows: 2 tail: 46 index: 69
-    Stream: column 0 section ROW_INDEX start: 3 length 9
-    Stream: column 1 section ROW_INDEX start: 12 length 36
-    Stream: column 2 section ROW_INDEX start: 48 length 24
-    Stream: column 1 section DATA start: 72 length 18
-    Stream: column 1 section LENGTH start: 90 length 7
-    Stream: column 2 section DATA start: 97 length 8
+  Stripe: offset: 3 data: 24 rows: 2 tail: 60 index: 58
+    Stream: column 0 section ROW_INDEX start: 3 length 6
+    Stream: column 1 section ROW_INDEX start: 9 length 32
+    Stream: column 2 section ROW_INDEX start: 41 length 20
+    Stream: column 1 section DATA start: 61 length 15
+    Stream: column 1 section LENGTH start: 76 length 4
+    Stream: column 2 section DATA start: 80 length 5
     Encoding column 0: DIRECT
     Encoding column 1: DIRECT_V2
     Encoding column 2: DIRECT_V2

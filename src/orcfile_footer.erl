@@ -8,28 +8,43 @@
 %%%-------------------------------------------------------------------
 -module(orcfile_footer).
 
--export([to_iolist/1, postscript/1]).
+-export([to_iolist/1, postscript/2]).
 
 -include("orc_proto_pb.hrl").
 
 to_iolist(_) ->
-    Footer = #footer{headerlength = 0,
-                     contentlength = 0,
+    Footer = #footer{headerlength = 16#dead,
+                     contentlength = 16#beef,
                      stripes = [#stripeinformation{}],
                      types = [#type{kind= 'BOOLEAN'}],
                      metadata = [#usermetadataitem{
                                     name = <<"hoge">>,
                                     value = <<"value">>}],
-                     numberofrows = 0,
-                     statistics = [#columnstatistics{}],
-                     rowindexstride = 0},
+                     numberofrows = 2,
+                     statistics = [#columnstatistics{
+                                      numberofvalues=2},
+                                   #columnstatistics{
+                                      numberofvalues=2,
+                                      stringstatistics=
+                                          #stringstatistics{
+                                             minimum="\"aasdf\"",
+                                             maximum="\"foobar\""}},
+                                   #columnstatistics{
+                                      numberofvalues=2,
+                                      intstatistics=
+                                          #integerstatistics{
+                                             minimum=12,
+                                             maximum=235,
+                                             sum=247}}
+                                  ]},
+                     %%rowindexstride = 0},
     orc_proto_pb:encode(Footer).
 
-postscript(_) ->
-    PS = #postscript{footerlength = 0,
-                     %% compression = 'ZLIB',
-                     compressionblocksize = 0,
-                     version = [1],
-                     metadatalength = 1,
-                     magic = "ORC"},
+postscript(_, FooterLength) ->
+    PS = #postscript{footerlength = FooterLength,
+                     compression = 'NONE',
+                     compressionblocksize = 262144,
+                     version = [1024],
+                     metadatalength = 16#c00,
+                     magic = [$O,$R,$C,16#F]},
     orc_proto_pb:encode(PS).
