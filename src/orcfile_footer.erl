@@ -42,9 +42,10 @@ to_iolist(_) ->
 
 postscript(_, FooterLength) ->
     PS = #postscript{footerlength = FooterLength,
-                     compression = 'NONE',
-                     compressionblocksize = 262144,
-                     version = [1024],
-                     metadatalength = 16#c00,
+                     %% compression = 'NONE',
+                     %% compressionblocksize = 262144,
+                     compressionblocksize = 16,
+                     version = [0,11],
+                     metadatalength = 12,
                      magic = [$O,$R,$C,16#F]},
     orc_proto_pb:encode(PS).

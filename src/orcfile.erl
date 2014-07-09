@@ -20,6 +20,8 @@
 -export([create/3, push/2, write/2, close/1]).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("kernel/include/file.hrl").
+%% -include("orc_proto_pb.hrl").
 
 -record(params, {
           %%  Key 	Default 	Notes
@@ -47,7 +49,12 @@
 
 open(Filename) ->
     {ok, Fd} = file:open(Filename, [read,binary]),
+    %% check header magic number
+    %% seek from backward
     New = #orcfile{},
+    %% read postscript,
+    %% read footer
+    %% read streams
     {ok, New#orcfile{file=Filename, fd=Fd}}.
 
 create(Filename, Schema, _Options) ->
@@ -85,20 +92,20 @@ write(ORCFile, _P) ->
 
 flush(#orcfile{fd=Fd, stripe=Stripe} = _ORCFile) ->
     %% Stripes:
-    Binary = orcfile_stripe:to_iolist(Stripe),
+    _Binary = orcfile_stripe:to_iolist(Stripe),
     %% ?debugVal(Binary),
-    ok = file:write(Fd, Binary),
+    %% ok = file:write(Fd, Binary),
     %% File footer:
-    Footer = orcfile_footer:to_iolist(tmp),
+    %%Footer = orcfile_footer:to_iolist(tmp),
     %% ?debugVal(Footer),
-    ok = file:write(Fd, Footer),
+    %% ok = file:write(Fd, Footer),
     %% postscript:
-    FooterLen = byte_size(iolist_to_binary(Footer)),
-    Postscript = orcfile_footer:postscript(tmp,FooterLen),
+    %%FooterLen = byte_size(iolist_to_binary(Footer)),
+    %%?debugVal(FooterLen),
+    Postscript = orcfile_footer:postscript(tmp,8),
                                            
-    %% ?debugVal(Postscript),
     ok = file:write(Fd, Postscript),
-    {ok, byte_size(iolist_to_binary(Binary))}.
+    {ok, byte_size(iolist_to_binary(Postscript))}.
 
 %% actually writes and flushes to the file
 close(#orcfile{mode=Mode, fd=Fd} = ORCFile) ->
@@ -160,8 +167,25 @@ orcfile_write2_test() ->
     
 
 orcfile_read_test() ->
-    {ok, ORCFile} = orcfile:open("../test/000000_0"),
-    ?debugVal(ORCFile),
-    ok = orcfile:close(ORCFile).
+    Filename = "../test/000000_0",
+    {ok, FileInfo} = file:read_file_info(Filename),
+    Size = FileInfo#file_info.size,
+
+    {ok, Fd} = file:open(Filename, [read,binary]),
+    {ok, [<<"ORC">>, Bin]} = file:pread(Fd, [{0,3}, {3, Size-3}]),
+    ?debugVal(Bin),
+
+    try
+        PBObj = orc_proto_pb:decode_rowindex(Bin),
+        ?debugVal(PBObj)
+    
+    %% {ok, ORCFile} = orcfile:open("../test/000000_0"),
+    %% ?debugVal(ORCFile),
+    %%ok = orcfile:close(ORCFile).
+    catch _:E ->
+            ?debugVal(E)
+    after
+        file:close(Fd)
+    end.
 
 -endif.
